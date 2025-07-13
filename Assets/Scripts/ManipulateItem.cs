@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Text.RegularExpressions;
+
 
 public class ManipulateItem : MonoBehaviour
 {
@@ -16,6 +18,10 @@ public class ManipulateItem : MonoBehaviour
 
     public GameObject objects;
 
+    public TMP_InputField updateLayerText;
+
+    public GameObject deleteAllPanel;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,30 +29,44 @@ public class ManipulateItem : MonoBehaviour
     }
 
 
-    public void SetItem(GameObject newItem) {
+    public void SetItem(GameObject newItem)
+    {
         item = newItem;
 
         currentlySelected.sprite = item.GetComponent<Image>().sprite;
+        int newOrder = item.GetComponent<Transform>().GetSiblingIndex();
+        layerLabel.text = newOrder.ToString();
     }
 
     // Layers
     public void BringUp() {
         int newOrder = item.GetComponent<Transform>().GetSiblingIndex() + 1;
         item.GetComponent<Transform>().SetSiblingIndex (newOrder);
-
+        Debug.Log("Bringing Up To: " +newOrder);
         layerLabel.text = newOrder.ToString();
     }
 
     public void BringBack() {
         int newOrder = item.GetComponent<Transform>().GetSiblingIndex() - 1;
         item.GetComponent<Transform>().SetSiblingIndex (newOrder);
-
+        Debug.Log("Bringing Back To: " + newOrder);
         layerLabel.text = newOrder.ToString();
+    }
+
+    public void UpdateLayer()
+    {
+        if (Regex.IsMatch(updateLayerText.text, @"^\d+$"))
+        { 
+            int newOrder = int.Parse(updateLayerText.text);
+            item.GetComponent<Transform>().SetSiblingIndex (newOrder);
+        }
+        updateLayerText.text = "";
     }
 
     // Deleting Items
 
-    public void DeleteItem() {
+    public void DeleteItem()
+    {
         currentlySelected.sprite = null;
         Destroy(item);
     }
@@ -55,16 +75,30 @@ public class ManipulateItem : MonoBehaviour
         currentlySelected.sprite = null;
 
         background.GetComponent<Image>().sprite = resetBgSprite;
-
-        while (transform.childCount > 1) {
+        deleteAllPanel.SetActive(false);
+        
+        while (objects.GetComponent<Transform>().childCount > 0)
+        {
             DestroyImmediate(objects.GetComponent<Transform>().GetChild(0).gameObject);
         }
-
+        
         // set background to delete too
        
     }
+
+    public void CheckDeleteAll()
+    {
+        deleteAllPanel.SetActive(true);
+    }
+
+    public void UndoDeleteAll()
+    {
+        deleteAllPanel.SetActive(false);
+    }
+
     // Flip Manipluation
-    public void Flip() {
+    public void Flip()
+    {
         float xScale = item.GetComponent<Transform>().localScale.x;
         item.GetComponent<Transform>().localScale = new Vector2(xScale * -1, 0.6f);
     }
